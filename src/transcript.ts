@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
-import type { TranscriptData, ToolEntry, AgentEntry, TodoItem } from './types.js';
+import type { TranscriptData, ToolEntry, AgentEntry, TodoItem, MainSession } from './types.js';
 
 interface TranscriptLine {
   timestamp?: string;
@@ -19,10 +19,18 @@ interface ContentBlock {
 }
 
 export async function parseTranscript(transcriptPath: string): Promise<TranscriptData> {
+  const defaultMainSession: MainSession = {
+    currentTask: undefined,
+    completedTodos: 0,
+    totalTodos: 0,
+    todos: [],
+  };
+
   const result: TranscriptData = {
     tools: [],
     agents: [],
     todos: [],
+    mainSession: defaultMainSession,
   };
 
   if (!transcriptPath || !fs.existsSync(transcriptPath)) {
@@ -55,8 +63,18 @@ export async function parseTranscript(transcriptPath: string): Promise<Transcrip
   }
 
   result.tools = Array.from(toolMap.values()).slice(-20);
-  result.agents = Array.from(agentMap.values()).slice(-10);
+  result.agents = Array.from(agentMap.values()).slice(-16); // 4x4 grid max
   result.todos = latestTodos;
+
+  // Compute main session stats from todos
+  const completedTodos = latestTodos.filter(t => t.status === 'completed').length;
+  const inProgressTodo = latestTodos.find(t => t.status === 'in_progress');
+  result.mainSession = {
+    currentTask: inProgressTodo?.content,
+    completedTodos,
+    totalTodos: latestTodos.length,
+    todos: latestTodos,
+  };
 
   return result;
 }
@@ -96,6 +114,9 @@ function processEntry(
           description: (input?.description as string) ?? undefined,
           status: 'running',
           startTime: timestamp,
+          currentTask: (input?.description as string) ?? undefined,
+          completedTodos: 0,
+          totalTodos: 0,
         };
         agentMap.set(block.id, agentEntry);
       } else if (block.name === 'TodoWrite') {

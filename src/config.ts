@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-export type LayoutType = 'default' | 'separators';
+export type LayoutType = 'default' | 'separators' | 'grid';
 
 export type AutocompactBufferMode = 'enabled' | 'disabled';
 
@@ -62,7 +62,7 @@ function validatePathLevels(value: unknown): value is 1 | 2 | 3 {
 }
 
 function validateLayout(value: unknown): value is LayoutType {
-  return value === 'default' || value === 'separators';
+  return value === 'default' || value === 'separators' || value === 'grid';
 }
 
 function validateAutocompactBuffer(value: unknown): value is AutocompactBufferMode {

@@ -46,14 +46,14 @@ Claude HUD gives you better insights into what's happening in your Claude Code s
 
 ### Session Info
 ```
-[Opus | Pro] █████░░░░░ 45% | my-project git:(main) | 2 CLAUDE.md | 5h: 25% | ⏱️ 5m
+[Opus | Pro] █████░░░░░ 45% | my-project git:(main* ↑2 +150/-45) | 📄2 📏5 🔌3 ⚡8 | 5h: 25% | ⏱️ 5m
 ```
 - **Model** — Current model in use (shown first)
 - **Plan name** — Your subscription tier (Pro, Max, Team) when usage enabled
 - **Context bar** — Visual meter with color coding (green → yellow → red as it fills)
 - **Project path** — Configurable 1-3 directory levels (default: 1)
 - **Git branch** — Current branch name (configurable on/off)
-- **Config counts** — CLAUDE.md files, rules, MCPs, and hooks loaded
+- **Config counts** — CLAUDE.md (📄), rules (📏), MCPs (🔌), and hooks (⚡) loaded
 - **Usage limits** — 5-hour rate limit percentage (opt-in, Pro/Max/Team only)
 - **Duration** — How long the session has been running
 
@@ -129,11 +129,12 @@ You can also edit the config file directly at `~/.claude/plugins/claude-hud/conf
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `layout` | string | `default` | Layout style: `default` or `separators` |
+| `layout` | string | `default` | Layout style: `default`, `separators`, or `grid` |
 | `pathLevels` | 1-3 | 1 | Directory levels to show in project path |
 | `gitStatus.enabled` | boolean | true | Show git branch in HUD |
 | `gitStatus.showDirty` | boolean | true | Show `*` for uncommitted changes |
 | `gitStatus.showAheadBehind` | boolean | false | Show `↑N ↓N` for ahead/behind remote |
+| `gitStatus.showDiffStats` | boolean | true | Show `+N/-N` for staged/unstaged changes |
 | `display.showModel` | boolean | true | Show model name `[Opus]` |
 | `display.showContextBar` | boolean | true | Show visual context bar `████░░░░░░` |
 | `display.showConfigCounts` | boolean | true | Show CLAUDE.md, rules, MCPs, hooks counts |
@@ -180,6 +181,74 @@ To disable usage display, set `display.showUsage` to `false` in your config.
 ✓ Read ×3 | ✓ Edit ×1
 ```
 
+**Grid layout** — 4×4 agent grid with box drawing for multi-agent workflows:
+```
+[Opus] ████░░░░░░ 42% | my-project git:(main*) | 📄1 📏5 🔌3 ⚡8 | 5h: 45% | ⏱️ 1h 30m
+┌──────────────────────────────┬──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
+│🎯 MAIN (3/8)(59%)            │⚙️ scout🎭 (0/0)(12%)         │✅ kraken🎭 (5/5)(87%)        │⚙️ oracle🎭 (1/3)(34%)        │
+│  └─ Fix auth module          │  └─ Exploring...             │  └─ Done                     │  └─ Web search               │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│❌ spark⚡ (0/2)(91%)         │⚙️ phoenix🎭 (2/4)(45%)       │⏳ arbiter🎭 (0/3)(5%)        │✅ sleuth🎭 (3/3)(78%)        │
+│  └─ Type error               │  └─ Refactoring...           │  └─ Waiting                  │  └─ Found root cause         │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│⚙️ archite…🧠 (1/6)(23%)      │⚠️ herald🎭 (1/2)(82%)        │✅ critic🎭 (4/4)(65%)        │⚙️ profile…🎭 (0/1)(8%)       │
+│  └─ Planning phase 2         │  └─ Changelog issue          │  └─ Review complete          │  └─ Profiling...             │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│🔒 atlas🎭 (0/5)(15%)         │⚙️ liaison🎭 (2/3)(56%)       │✅ surveyo…🎭 (2/2)(72%)      │⚙️ scribe🎭 (0/1)(19%)        │
+│  └─ Blocked on API           │  └─ API review               │  └─ Done                     │  └─ Writing docs             │
+└──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+```
+
+#### Grid Layout Details
+
+The grid layout is designed for **multi-agent orchestration workflows** where you're running many concurrent agents.
+
+**Cell Format:**
+```
+│ <status> <name><model> (todos)(context%) │
+│   └─ <current task>                      │
+```
+
+**Status Icons:**
+| Icon | Status | Meaning |
+|------|--------|---------|
+| 🎯 | Main | Your main Claude session |
+| ⚙️ | Running | Agent is actively working |
+| ✅ | Completed | Agent finished successfully |
+| ❌ | Error | Agent encountered an error |
+| ⚠️ | Warning | Agent has a warning |
+| ⏳ | Pending | Agent is queued/waiting |
+| 🔒 | Blocked | Agent is blocked on something |
+
+**Model Badges:**
+| Icon | Model |
+|------|-------|
+| 🧠 | Opus |
+| 🎭 | Sonnet |
+| ⚡ | Haiku |
+
+**Progress Display:**
+- `(3/8)` — Completed todos / Total todos
+- `(59%)` — Context window usage percentage
+
+**Color Coding:**
+- 🟢 Green — Completed agents
+- 🔴 Red — Error state
+- 🟡 Yellow — Warning state
+- ⚫ Dim — Pending/blocked agents
+- 🔵 Cyan — Main session
+
+**Grid Specifications:**
+- **Columns:** 4
+- **Column Width:** 30 characters
+- **Max Agents:** 15 (+ main session = 16 slots)
+- **Total Width:** ~125 characters
+
+**Test the grid layout:**
+```bash
+cd ~/Projects/claude-hud && bun run src/index.ts --test
+```
+
 ### Example Configuration
 
 ```json
@@ -216,6 +285,8 @@ To disable usage display, set `display.showUsage` to `false` in your config.
 **With dirty indicator:** `[Opus] 45% | my-project git:(main*) | ...`
 
 **With ahead/behind:** `[Opus] 45% | my-project git:(main ↑2 ↓1) | ...`
+
+**With diff stats:** `[Opus] 45% | my-project git:(main* ↑2 +150/-45) | ...`
 
 **Minimal display (only context %):** Configure `showModel`, `showContextBar`, `showConfigCounts`, `showDuration` to `false`
 

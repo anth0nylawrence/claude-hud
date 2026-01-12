@@ -27,14 +27,20 @@ export interface ToolEntry {
   endTime?: Date;
 }
 
+export type AgentStatus = 'running' | 'completed' | 'error' | 'warning' | 'blocked' | 'pending';
+
 export interface AgentEntry {
   id: string;
   type: string;
   model?: string;
   description?: string;
-  status: 'running' | 'completed';
+  status: AgentStatus;
   startTime: Date;
   endTime?: Date;
+  currentTask?: string;
+  completedTodos: number;
+  totalTodos: number;
+  contextPercent?: number; // Context window usage percentage
 }
 
 export interface TodoItem {
@@ -62,10 +68,19 @@ export function isLimitReached(data: UsageData): boolean {
   return data.fiveHour === 100 || data.sevenDay === 100;
 }
 
+export interface MainSession {
+  currentTask?: string;
+  completedTodos: number;
+  totalTodos: number;
+  todos: TodoItem[];
+  contextPercent?: number; // Context window usage percentage
+}
+
 export interface TranscriptData {
   tools: ToolEntry[];
   agents: AgentEntry[];
   todos: TodoItem[];
+  mainSession: MainSession;
   sessionStart?: Date;
 }
 
