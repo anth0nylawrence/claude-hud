@@ -61,15 +61,20 @@ interface GridCell {
   status: AgentStatus | 'main';
 }
 
+function formatProgress(completed: number, total: number): string {
+  if (total === 0) return '';
+  return `(${completed}/${total})`;
+}
+
 function formatMainSession(ctx: RenderContext): GridCell {
   const { mainSession } = ctx.transcript;
   const icon = STATUS_ICONS.main;
-  const progress = `(${mainSession.completedTodos}/${mainSession.totalTodos})`;
+  const progress = formatProgress(mainSession.completedTodos, mainSession.totalTodos);
   const ctxPct = formatContextPercent(mainSession.contextPercent);
   const task = truncate(mainSession.currentTask || 'No active task', 22);
 
   return {
-    line1: `${icon} MAIN ${progress}${ctxPct}`,
+    line1: `${icon} MAIN${progress ? ` ${progress}` : ''}${ctxPct}`,
     line2: `  └─ ${task}`,
     status: 'main',
   };
@@ -79,12 +84,12 @@ function formatAgent(agent: AgentEntry): GridCell {
   const icon = STATUS_ICONS[agent.status] || STATUS_ICONS.running;
   const modelIcon = getModelIcon(agent.model);
   const name = truncate(agent.type, 8);
-  const progress = `(${agent.completedTodos}/${agent.totalTodos})`;
+  const progress = formatProgress(agent.completedTodos, agent.totalTodos);
   const ctxPct = formatContextPercent(agent.contextPercent);
   const task = truncate(agent.currentTask || agent.description || 'Working...', 22);
 
   return {
-    line1: `${icon} ${name}${modelIcon} ${progress}${ctxPct}`,
+    line1: `${icon} ${name}${modelIcon}${progress ? ` ${progress}` : ''}${ctxPct}`,
     line2: `  └─ ${task}`,
     status: agent.status,
   };
