@@ -74,28 +74,45 @@ export function renderSessionLine(ctx: RenderContext): string {
         }
       }
 
+      // Show diff stats (insertions/deletions)
+      if (gitConfig?.showDiffStats) {
+        const { insertions, deletions } = ctx.gitStatus;
+        if (insertions > 0 || deletions > 0) {
+          const diffParts: string[] = [];
+          if (insertions > 0) diffParts.push(`+${insertions}`);
+          if (deletions > 0) diffParts.push(`-${deletions}`);
+          gitParts.push(` ${diffParts.join('/')}`);
+        }
+      }
+
       gitPart = ` ${magenta('git:(')}${cyan(gitParts.join(''))}${magenta(')')}`;
     }
 
     parts.push(`${yellow(projectPath)}${gitPart}`);
   }
 
-  // Config counts
+  // Config counts with icons
   if (display?.showConfigCounts !== false) {
+    const configParts: string[] = [];
+
     if (ctx.claudeMdCount > 0) {
-      parts.push(dim(`${ctx.claudeMdCount} CLAUDE.md`));
+      configParts.push(`📄${ctx.claudeMdCount}`);
     }
 
     if (ctx.rulesCount > 0) {
-      parts.push(dim(`${ctx.rulesCount} rules`));
+      configParts.push(`📏${ctx.rulesCount}`);
     }
 
     if (ctx.mcpCount > 0) {
-      parts.push(dim(`${ctx.mcpCount} MCPs`));
+      configParts.push(`🔌${ctx.mcpCount}`);
     }
 
     if (ctx.hooksCount > 0) {
-      parts.push(dim(`${ctx.hooksCount} hooks`));
+      configParts.push(`⚡${ctx.hooksCount}`);
+    }
+
+    if (configParts.length > 0) {
+      parts.push(dim(configParts.join(' ')));
     }
   }
 

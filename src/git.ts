@@ -8,6 +8,8 @@ export interface GitStatus {
   isDirty: boolean;
   ahead: number;
   behind: number;
+  insertions: number;
+  deletions: number;
 }
 
 export async function getGitBranch(cwd?: string): Promise<string | null> {
@@ -69,7 +71,25 @@ export async function getGitStatus(cwd?: string): Promise<GitStatus | null> {
       // No upstream or error, keep 0/0
     }
 
-    return { branch, isDirty, ahead, behind };
+    // Get diff stats (insertions/deletions)
+    let insertions = 0;
+    let deletions = 0;
+    try {
+      const { stdout: diffOut } = await execFileAsync(
+        'git',
+        ['diff', '--shortstat'],
+        { cwd, timeout: 1000, encoding: 'utf8' }
+      );
+      // Parse: "3 files changed, 45 insertions(+), 12 deletions(-)"
+      const insertMatch = diffOut.match(/(\d+)\s+insertion/);
+      const deleteMatch = diffOut.match(/(\d+)\s+deletion/);
+      if (insertMatch) insertions = parseInt(insertMatch[1], 10);
+      if (deleteMatch) deletions = parseInt(deleteMatch[1], 10);
+    } catch {
+      // Ignore errors
+    }
+
+    return { branch, isDirty, ahead, behind, insertions, deletions };
   } catch {
     return null;
   }
