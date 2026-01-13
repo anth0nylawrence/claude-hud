@@ -3,6 +3,7 @@ import * as readline from 'readline';
 import type { TranscriptData, ToolEntry, AgentEntry, TodoItem, MainSession } from './types.js';
 
 interface TranscriptLine {
+  type?: string; // "user" or "assistant"
   timestamp?: string;
   message?: {
     content?: ContentBlock[];
@@ -90,6 +91,21 @@ function processEntry(
 
   if (!result.sessionStart && entry.timestamp) {
     result.sessionStart = timestamp;
+  }
+
+  // New user turn: clear completed/error agents from previous turn
+  if (entry.type === 'user') {
+    for (const [id, agent] of agentMap) {
+      if (agent.status === 'completed' || agent.status === 'error') {
+        agentMap.delete(id);
+      }
+    }
+    // Also clear completed tools
+    for (const [id, tool] of toolMap) {
+      if (tool.status === 'completed' || tool.status === 'error') {
+        toolMap.delete(id);
+      }
+    }
   }
 
   const content = entry.message?.content;
