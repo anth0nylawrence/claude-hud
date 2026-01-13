@@ -95,4 +95,5 @@ export interface RenderContext {
   gitStatus: GitStatus | null;
   usageData: UsageData | null;
   config: HudConfig;
+  now: number; // Current timestamp for calculating idle times
 }

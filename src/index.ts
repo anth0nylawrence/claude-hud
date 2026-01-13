@@ -70,6 +70,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
       gitStatus,
       usageData,
       config,
+      now: deps.now(),
     };
 
     deps.render(ctx);
@@ -97,6 +98,10 @@ export function formatSessionDuration(sessionStart?: Date, now: () => number = (
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // Test mode: render mock data to preview grid layout
   if (process.argv.includes('--test')) {
+    const nowMs = Date.now();
+    // Helper to create dates in the past
+    const minsAgo = (mins: number) => new Date(nowMs - mins * 60 * 1000);
+
     const mockCtx = {
       stdin: { cwd: '/test/project', model: { id: 'opus' }, session_id: 'test' },
       transcript: {
@@ -104,21 +109,21 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         todos: [],
         mainSession: { completedTodos: 3, totalTodos: 8, todos: [], currentTask: 'Fix auth module', contextPercent: 59 },
         agents: [
-          { id: '1', type: 'scout', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 0, totalTodos: 0, currentTask: 'Exploring...' },
-          { id: '2', type: 'kraken', model: 'sonnet', status: 'completed', startTime: new Date(), completedTodos: 5, totalTodos: 5, currentTask: 'Done', contextPercent: 87 },
-          { id: '3', type: 'oracle', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 1, totalTodos: 3, currentTask: 'Web search', contextPercent: 34 },
-          { id: '4', type: 'spark', model: 'haiku', status: 'error', startTime: new Date(), completedTodos: 0, totalTodos: 2, currentTask: 'Type error', contextPercent: 91 },
-          { id: '5', type: 'phoenix', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 2, totalTodos: 4, currentTask: 'Refactoring...', contextPercent: 45 },
-          { id: '6', type: 'arbiter', model: 'sonnet', status: 'pending', startTime: new Date(), completedTodos: 0, totalTodos: 0, currentTask: 'Waiting' },
-          { id: '7', type: 'sleuth', model: 'sonnet', status: 'completed', startTime: new Date(), completedTodos: 3, totalTodos: 3, currentTask: 'Found root cause', contextPercent: 78 },
-          { id: '8', type: 'architect', model: 'opus', status: 'running', startTime: new Date(), completedTodos: 1, totalTodos: 6, currentTask: 'Planning phase 2', contextPercent: 23 },
-          { id: '9', type: 'herald', model: 'sonnet', status: 'warning', startTime: new Date(), completedTodos: 1, totalTodos: 2, currentTask: 'Changelog issue', contextPercent: 82 },
-          { id: '10', type: 'critic', model: 'sonnet', status: 'completed', startTime: new Date(), completedTodos: 4, totalTodos: 4, currentTask: 'Review complete', contextPercent: 65 },
-          { id: '11', type: 'profiler', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 0, totalTodos: 1, currentTask: 'Profiling...', contextPercent: 8 },
-          { id: '12', type: 'atlas', model: 'sonnet', status: 'blocked', startTime: new Date(), completedTodos: 0, totalTodos: 5, currentTask: 'Blocked on API', contextPercent: 15 },
-          { id: '13', type: 'liaison', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 2, totalTodos: 3, currentTask: 'API review', contextPercent: 56 },
-          { id: '14', type: 'surveyor', model: 'sonnet', status: 'completed', startTime: new Date(), completedTodos: 2, totalTodos: 2, currentTask: 'Done', contextPercent: 72 },
-          { id: '15', type: 'scribe', model: 'sonnet', status: 'running', startTime: new Date(), completedTodos: 0, totalTodos: 1, currentTask: 'Writing docs', contextPercent: 19 },
+          { id: '1', type: 'scout', model: 'sonnet', status: 'running', startTime: minsAgo(1), completedTodos: 0, totalTodos: 0, currentTask: 'Exploring...' },
+          { id: '2', type: 'kraken', model: 'sonnet', status: 'completed', startTime: minsAgo(10), completedTodos: 5, totalTodos: 5, currentTask: 'Done', contextPercent: 87 },
+          { id: '3', type: 'oracle', model: 'sonnet', status: 'running', startTime: minsAgo(5), completedTodos: 1, totalTodos: 3, currentTask: 'Web search', contextPercent: 34 },
+          { id: '4', type: 'spark', model: 'haiku', status: 'error', startTime: minsAgo(3), completedTodos: 0, totalTodos: 2, currentTask: 'Type error', contextPercent: 91 },
+          { id: '5', type: 'phoenix', model: 'sonnet', status: 'running', startTime: minsAgo(8), completedTodos: 2, totalTodos: 4, currentTask: 'Refactoring...', contextPercent: 45 },
+          { id: '6', type: 'arbiter', model: 'sonnet', status: 'pending', startTime: minsAgo(2), completedTodos: 0, totalTodos: 0, currentTask: 'Waiting' },
+          { id: '7', type: 'sleuth', model: 'sonnet', status: 'completed', startTime: minsAgo(15), completedTodos: 3, totalTodos: 3, currentTask: 'Found root cause', contextPercent: 78 },
+          { id: '8', type: 'architect', model: 'opus', status: 'running', startTime: minsAgo(12), completedTodos: 1, totalTodos: 6, currentTask: 'Planning phase 2', contextPercent: 23 },
+          { id: '9', type: 'herald', model: 'sonnet', status: 'warning', startTime: minsAgo(4), completedTodos: 1, totalTodos: 2, currentTask: 'Changelog issue', contextPercent: 82 },
+          { id: '10', type: 'critic', model: 'sonnet', status: 'completed', startTime: minsAgo(20), completedTodos: 4, totalTodos: 4, currentTask: 'Review complete', contextPercent: 65 },
+          { id: '11', type: 'profiler', model: 'sonnet', status: 'running', startTime: minsAgo(1), completedTodos: 0, totalTodos: 1, currentTask: 'Profiling...', contextPercent: 8 },
+          { id: '12', type: 'atlas', model: 'sonnet', status: 'blocked', startTime: minsAgo(6), completedTodos: 0, totalTodos: 5, currentTask: 'Blocked on API', contextPercent: 15 },
+          { id: '13', type: 'liaison', model: 'sonnet', status: 'running', startTime: minsAgo(3), completedTodos: 2, totalTodos: 3, currentTask: 'API review', contextPercent: 56 },
+          { id: '14', type: 'surveyor', model: 'sonnet', status: 'completed', startTime: minsAgo(25), completedTodos: 2, totalTodos: 2, currentTask: 'Done', contextPercent: 72 },
+          { id: '15', type: 'scribe', model: 'sonnet', status: 'running', startTime: minsAgo(0.5), completedTodos: 0, totalTodos: 1, currentTask: 'Writing docs', contextPercent: 19 },
         ],
       },
       claudeMdCount: 1,
@@ -129,6 +134,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       gitStatus: { branch: 'main', isDirty: true, ahead: 2, behind: 0, additions: 150, deletions: 45 },
       usageData: { fiveHour: 45, sevenDay: 23, planName: 'test', fiveHourResetAt: '', sevenDayResetAt: '' },
       config: { layout: 'grid' as const, display: {}, gitStatus: { enabled: true } },
+      now: nowMs,
     } as unknown as RenderContext;
     render(mockCtx);
   } else {

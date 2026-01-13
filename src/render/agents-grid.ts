@@ -55,6 +55,23 @@ function formatContextPercent(percent?: number): string {
   return `(${percent}%)`;
 }
 
+/** Stall threshold: 2 minutes in milliseconds */
+const STALL_THRESHOLD_MS = 2 * 60 * 1000;
+
+/**
+ * Returns idle indicator if agent has been running for > 2 minutes
+ * Format: "⏸ Xm" where X is minutes idle
+ */
+function formatIdleIndicator(agent: AgentEntry, now: number): string {
+  if (agent.status !== 'running') return '';
+
+  const idleMs = now - agent.startTime.getTime();
+  if (idleMs < STALL_THRESHOLD_MS) return '';
+
+  const idleMins = Math.floor(idleMs / 60000);
+  return ` ⏸${idleMins}m`;
+}
+
 interface GridCell {
   line1: string; // Header: icon + name + progress + context% (raw, no colors)
   line2: string; // Detail: current task (raw, no colors)
@@ -80,16 +97,17 @@ function formatMainSession(ctx: RenderContext): GridCell {
   };
 }
 
-function formatAgent(agent: AgentEntry): GridCell {
+function formatAgent(agent: AgentEntry, now: number): GridCell {
   const icon = STATUS_ICONS[agent.status] || STATUS_ICONS.running;
   const modelIcon = getModelIcon(agent.model);
   const name = truncate(agent.type, 8);
   const progress = formatProgress(agent.completedTodos, agent.totalTodos);
   const ctxPct = formatContextPercent(agent.contextPercent);
+  const idleIndicator = formatIdleIndicator(agent, now);
   const task = truncate(agent.currentTask || agent.description || 'Working...', 22);
 
   return {
-    line1: `${icon} ${name}${modelIcon}${progress ? ` ${progress}` : ''}${ctxPct}`,
+    line1: `${icon} ${name}${modelIcon}${progress ? ` ${progress}` : ''}${ctxPct}${idleIndicator}`,
     line2: `  └─ ${task}`,
     status: agent.status,
   };
@@ -150,7 +168,7 @@ export function renderAgentsGrid(ctx: RenderContext): string[] {
   cells.push(mainCell);
 
   for (const agent of agents.slice(0, 15)) {
-    cells.push(formatAgent(agent));
+    cells.push(formatAgent(agent, ctx.now));
   }
 
   if (cells.length === 1 && ctx.transcript.mainSession.totalTodos === 0) {
